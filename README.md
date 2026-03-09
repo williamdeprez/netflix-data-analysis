@@ -6,6 +6,9 @@ This project analyzes trends in Netflix content using two datasets. The goal of 
 ## Datasets
 
 ### 1. Netflix Movies and TV Shows
+Dataset link:  
+https://www.kaggle.com/datasets/shivamb/netflix-shows
+
 This dataset contains information about Netflix titles including:
 - type (Movie or TV Show)
 - title
@@ -19,17 +22,37 @@ This dataset contains information about Netflix titles including:
 - listed_in (genre)
 - description
 
-### 2. Netflix Movies Dataset 37467x10
-This dataset contains additional information about Netflix movies including:
-- IMDb ratings
-- nominations for awards
+---
+
+### 2. Netflix Movies Dataset 37468x10
+Dataset link:  
+https://www.kaggle.com/datasets/mytalkwithyou/netflix-movies-dataset-37468x10
+
+This dataset contains additional information about Netflix movies including IMDb ratings and award nominations.
+
+Columns included in this dataset:
+
+- original_title  
+- is_adult  
+- year_of_release  
+- runtime  
+- imdb_rating  
+- release_month  
+- nominations  
+- wins  
+- actors_name  
+- genre  
 
 Together, these datasets allow us to explore both the structure of Netflix's catalog and the reception of that content through ratings and award nominations.
+
+---
 
 ## Background and Motivation
 Our motivation stems from wanting to understand the trends in Netflix content production, genre popularity, and audience preferences. By examining the datasets containing variables such as the release date, genre, duration, and audience ratings, we can identify patterns that appear most frequently on Netflix.
 
 Since Netflix hosts content from various different countries and spans multiple years, it allows us to analyze how factors such as country of production, release year, and genre relate to award nominations and overall success.
+
+---
 
 ## Research Questions
 
@@ -53,10 +76,14 @@ Since Netflix hosts content from various different countries and spans multiple 
 - Who are the top 10 most frequent actors?
 - Which directors appear most frequently on Netflix?
 
+---
+
 ## Why These Questions?
 These questions are interesting because they address the type of content that is most prevalent. They also answer what time period has the most content and what country has the most content present. This is interesting data because it can be used to answer what type of content is most popular or most consumed on Netflix.
 
 In addition, the data may show how the catalog of Netflix has changed over time. Using the additional dataset, we will answer additional questions regarding reviews from consumers and academy award nominations.
+
+---
 
 ## Goal
 The goal of this project is to identify patterns within Netflix’s content library and better understand how genre, runtime, country of origin, ratings, and award nominations relate to the overall distribution of content on the platform.
