@@ -1,0 +1,33 @@
+---
+title: "data_report.rmd"
+output: pdf_document
+date: "2026-04-01"
+---
+
+# Before Cleaning
+
+## Descriptive Statistics
+Display key statistics (mean, median, mode,
+standard deviation, etc.)
+
+## Tables
+Show a comparison of missing values, duplicates, or other
+inconsistencies before and after cleaning
+
+## Visualizations
+If you remove or modify data significantly, use plots
+(histograms, boxplots, bar charts, etc.) to illustrate the impact
+
+# After Cleaning
+
+## Descriptive Statistics
+Display key statistics (mean, median, mode,
+standard deviation, etc.)
+
+## Tables
+Show a comparison of missing values, duplicates, or other
+inconsistencies before and after cleaning
+
+## Visualizations
+If you remove or modify data significantly, use plots
+(histograms, boxplots, bar charts, etc.) to illustrate the impact
