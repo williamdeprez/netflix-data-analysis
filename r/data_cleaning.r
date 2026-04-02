@@ -1,10 +1,17 @@
 library(here)
 library(tidyverse)
 library(ggplot2)
+dir.create(here("data/processed"), showWarnings = FALSE)
 
 # load raw data
 netflix <- read.csv(here("data/raw/netflix_titles.csv"))
 imdb_netflix <- read.csv(here("data/raw/Netflix Movies_TVShows Dataset.csv"))
+cat("ORIGINAL DATASET SUMMARY\n")
+cat("Netflix dataset rows:", nrow(netflix), "\n")
+cat("IMDb dataset rows:", nrow(imdb_netflix), "\n")
+
+netflix[netflix == ""] <- NA
+imdb_netflix[imdb_netflix == ""] <- NA
 
 # before cleaning
 before_structure <- data.frame(
@@ -29,7 +36,13 @@ write.csv(before_missing,
 imdb_netflix <- imdb_netflix |>
   rename(title = original_title)
 
+dup_count <- sum(duplicated(imdb_netflix$title))
+cat("Duplicate titles in IMDb dataset BEFORE cleaning:", dup_count, "\n")
+
+# Remove duplicates
 imdb_netflix <- imdb_netflix[!duplicated(imdb_netflix$title), ]
+
+cat("Row count BEFORE cleaning:", nrow(netflix), "\n")
 
 clean_title <- function(x) {
   x %>%
@@ -41,9 +54,33 @@ clean_title <- function(x) {
 netflix$title <- clean_title(netflix$title)
 imdb_netflix$title <- clean_title(imdb_netflix$title)
 
-final_data <- merge(netflix, imdb_netflix, by = "title", all.x = TRUE)
+netflix$title[netflix$title == ""] <- NA
+imdb_netflix$title[imdb_netflix$title == ""] <- NA
+netflix <- netflix[!is.na(netflix$title), ]
+imdb_netflix <- imdb_netflix[!is.na(imdb_netflix$title), ]
 
-dir.create(here("data/processed"), showWarnings = FALSE)
+netflix <- netflix[!duplicated(netflix), ]
+
+netflix$duration_num <- suppressWarnings(
+  as.numeric(gsub("[^0-9]", "", netflix$duration))
+)
+
+# remove TV show durations because they default to 1
+netflix$duration_num[netflix$type == "TV Show"] <- NA
+
+netflix$country[netflix$country == ""] <- NA
+
+netflix$country <- sapply(strsplit(netflix$country, ","), `[`, 1)
+netflix$country <- trimws(netflix$country)
+
+netflix$date_added <- as.Date(netflix$date_added, format = "%B %d, %Y")
+
+final_data <- merge(netflix, imdb_netflix, by = "title", all.x = TRUE)
+cat("Row count AFTER cleaning:", nrow(final_data), "\n")
+
+write.csv(final_data,
+          here("data/processed/final_data.csv"),
+          row.names = FALSE)
 
 # export cleaned data
 structure_df <- data.frame(

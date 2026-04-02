@@ -2,6 +2,7 @@
 title: "data_report.rmd"
 output: pdf_document
 date: "2026-04-01"
+geometry: margin=0.25in
 ---
 
 # Before Cleaning
@@ -10,24 +11,216 @@ date: "2026-04-01"
 Display key statistics (mean, median, mode,
 standard deviation, etc.)
 
+```{r echo=FALSE, message=FALSE}
+library(here)
+
+netflix <- read.csv(here("data/raw/netflix_titles.csv"))
+
+# Mode function
+get_mode <- function(x) {
+  ux <- na.omit(unique(x))
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+stats <- data.frame(
+  Mean = mean(netflix$release_year, na.rm = TRUE),
+  Median = median(netflix$release_year, na.rm = TRUE),
+  SD = sd(netflix$release_year, na.rm = TRUE),
+  Mode = get_mode(netflix$release_year)
+)
+
+
+stats
+```
+
 ## Tables
 Show a comparison of missing values, duplicates, or other
 inconsistencies before and after cleaning
 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(here)
+
+before_missing <- read.csv(here("data/processed/before_missing.csv"))
+
+before_missing
+
+```
+
 ## Visualizations
 If you remove or modify data significantly, use plots
 (histograms, boxplots, bar charts, etc.) to illustrate the impact
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.width=4, fig.height=3.5}
+library(here)
+library(ggplot2)
+
+netflix <- read.csv(here("data/raw/netflix_titles.csv"))
+
+ggplot(netflix, aes(x = release_year)) +
+  geom_histogram(bins = 30) +
+  ggtitle("Distribution of Release Years (Before)")
+
+duration_raw <- suppressWarnings(
+  as.numeric(gsub("[^0-9]", "", netflix$duration))
+)
+
+ggplot(data.frame(duration_raw), aes(x = duration_raw)) +
+  geom_histogram(bins = 30) +
+  ggtitle("Raw Duration Distribution (Before)") +
+  xlab("Extracted Duration") +
+  ylab("Count")
+
+before_missing <- read.csv(here("data/processed/before_missing.csv"))
+
+ggplot(before_missing, aes(x = reorder(column, -missing_count), y = missing_count)) +
+  geom_bar(stat = "identity") +
+  ggtitle("Missing Values Before Cleaning") +
+  xlab("Column") +
+  ylab("Missing Count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+## Summary
+The data is mostly modern movies and TV shows, mostly being in the past decade. Several columns were missing values, mainly director, country, and cast. Missing values were originally empty strings. The date_added variable was stored as a string instead of a proper date format. The duration variable was stored as a string with mixed formats (e.g., "90 min" for movies and "2 Seasons" for TV shows), which made it difficult to analyze without cleaning.
+
+In addition to these issues, the IMDb dataset had many duplicate rows, so it was necessary to remove duplicates and consolidate. 
+
+Inconsistencies in formatting across the two datasets created challenges for integrating each dataset, especially title formatting.
+
+Also, the duration variable was very incorrect for TV shows, as it defaulted to 1 season, which is not accurate for most TV shows. This was a major issue that needed to be addressed during cleaning.
 
 # After Cleaning
 
 ## Descriptive Statistics
 Display key statistics (mean, median, mode,
 standard deviation, etc.)
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(here)
+
+final_data <- read.csv(here("data/processed/final_data.csv"))
+
+# Mode function
+get_mode <- function(x) {
+  ux <- na.omit(unique(x))
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+stats <- data.frame(
+  Variable = c("Release Year", "Duration", "IMDb Rating"),
+  Mean = c(
+    mean(final_data$release_year, na.rm = TRUE),
+    mean(final_data$duration_num, na.rm = TRUE),
+    mean(final_data$imdb_rating, na.rm = TRUE)
+  ),
+  Median = c(
+    median(final_data$release_year, na.rm = TRUE),
+    median(final_data$duration_num, na.rm = TRUE),
+    median(final_data$imdb_rating, na.rm = TRUE)
+  ),
+  SD = c(
+    sd(final_data$release_year, na.rm = TRUE),
+    sd(final_data$duration_num, na.rm = TRUE),
+    sd(final_data$imdb_rating, na.rm = TRUE)
+  ),
+  Mode = c(
+    get_mode(final_data$release_year),
+    get_mode(final_data$duration_num),
+    get_mode(final_data$imdb_rating)
+  )
+)
+
+stats
+```
 
 ## Tables
 Show a comparison of missing values, duplicates, or other
 inconsistencies before and after cleaning
 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(here)
+
+before_missing <- read.csv(here("data/processed/before_missing.csv"))
+after_missing <- read.csv(here("data/processed/final_missing.csv"))
+
+comparison <- merge(before_missing, after_missing, by="column", suffixes = c("_before", "_after"))
+
+comparison_small <- comparison[, c("column", "missing_count_before", "missing_count_after", "missing_percent_after")]
+
+comparison_small
+```
+
 ## Visualizations
 If you remove or modify data significantly, use plots
 (histograms, boxplots, bar charts, etc.) to illustrate the impact
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.width=4, fig.height=3.5}
+library(here)
+library(ggplot2)
+
+final_data <- read.csv(here("data/processed/final_data.csv"))
+
+ggplot(final_data, aes(x = duration_num)) +
+  geom_histogram(bins = 30) +
+  ggtitle("Distribution of Duration (After Cleaning)")
+
+after_missing <- read.csv(here("data/processed/final_missing.csv"))
+
+ggplot(after_missing, aes(x = reorder(column, -missing_count), y = missing_count)) +
+  geom_bar(stat = "identity") +
+  ggtitle("Missing Values After Cleaning") +
+  xlab("Column") +
+  ylab("Missing Count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Load raw IMDb
+imdb_raw <- read.csv(here("data/raw/Netflix Movies_TVShows Dataset.csv"))
+
+# Count before
+rows_before <- nrow(imdb_raw)
+
+# Count after (your cleaned dataset)
+imdb_clean <- read.csv(here("data/processed/final_data.csv"))
+
+# Count unique IMDb titles (approx after compression)
+rows_after <- length(unique(imdb_raw$original_title))
+
+# Create comparison table
+rows_df <- data.frame(
+  Stage = c("Before Cleaning", "After Cleaning"),
+  Rows = c(rows_before, rows_after)
+)
+
+ggplot(rows_df, aes(x = Stage, y = Rows)) +
+  geom_bar(stat = "identity") +
+  ggtitle("Reduction in IMDb Dataset Size")
+
+ggplot(final_data, aes(x = imdb_rating)) +
+  geom_histogram(bins = 30) +
+  ggtitle("Distribution of IMDb Ratings")
+
+ggplot(final_data, aes(x = "", y = imdb_rating)) +
+  geom_violin() +
+  ggtitle("Violin Plot of IMDb Ratings")
+```
+
+## Summary
+After cleaning, the dataset became more usable. The duration, imdb ratings, and dates were appropriately converted to usable formats. IMDb ratings, after merging many rows, are very helpful at judging content quality.
+
+Missing values are properly represented as NA now, thus the increase in missing count within the graph. This displays a more accurate representation of data, and not a loss of any quality. There is a high percentage of missing values, such as actors or genre, due to limited matching between the Netflix and IMDb datasets, but it is still relevant and important information.
+
+Additionally, the IMDb dataset was significantly reduced in size after removing the duplicate rows. This is evident in the comparison graph.
+
+Even though most of the dataset did not match, the data from the IMDb dataset was still very useful for analysis, as it provided ratings and additional metadata that were not present in the original Netflix dataset.
+
+This demonstrates the challenges of integrating real datasets, with many inconsistencies between sources of data.
+
+# Documentation & Justification
+
+We had many cleaning steps that were necessary to improve the usability of our dataset. Empty strings were converted to NA to ensure proper missing values were quantified.
+
+The merge was necessary to preserve the original dataset, even with the low match-rate, it still provides meaningful insights about the few matches it did contain - such as ratings.
+
+Duplicate rows in the IMDb dataset were consolidated to make sure each title was only displayed once. This prevented duplication during merging.
+
+Title fields were standardized to lowercase to ensure proper merging between the Netflix and IMDb datasets, as there were inconsistencies in capitalization.
+
+Duration was converted to numeric and date_added was converted to a date format, this was necessary for proper consistency.
